@@ -98,14 +98,14 @@ class Data extends AbstractHelper
      * @return json
      */
     public function getLimits($backofficeparams)
-    {    
+    {
         $response = [];
         try {
             /** @var PaymentManager $sdk */
             $sdk = new PaymentManager($backofficeparams);
             $sdk->setUrlAttributes(array('online'));
             $config = $sdk->getConfiguration();
-            
+
             // get values from openpay pay api
             $minValue = ((int)$config->minPrice)/100;
             $maxValue = ((int)$config->maxPrice)/100;
@@ -244,7 +244,7 @@ class Data extends AbstractHelper
                 ['method']
             )
             ->where('sop.method = ?', 'openpay');
-    
+
         if ($collection->getSize() > 0) {
             $storeId = $this->configHelper->getStoreId();
             $backofficeParams = $this->configHelper->getBackendParams($storeId);
@@ -254,6 +254,7 @@ class Data extends AbstractHelper
             foreach ($collection as $order) {
                 if ($order->getToken() != null) {
                     try {
+                        $response = null;
                         $sdk->setUrlAttributes([$order->getToken()]);
                         $response = $sdk->getOrder();
                     } catch (\Exception $e) {
@@ -265,7 +266,7 @@ class Data extends AbstractHelper
                             $this->logger->debug($e->getMessage());
                         //}
                     }
-                    if ($response->orderStatus == 'Approved' && $response->planStatus == 'Active') {
+                    if ($response && $response->orderStatus == 'Approved' && $response->planStatus == 'Active') {
                         //capture payment and generate invoice on magento
                         $this->generateInvoice($order);
                     } else {
